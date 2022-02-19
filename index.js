@@ -12,9 +12,8 @@ async function start() {
     const app = express();
 
     expressConfig(app);
-    routesConfig(app);
-
     app.use(await storage());
+    routesConfig(app);
     
     app.listen(port, () => console.log(`Server is listening on ${port}...`));
 }
