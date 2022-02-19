@@ -1,14 +1,8 @@
 const express = require('express');
-const hbs = require('express-handlebars');
+const expressConfig = require('./config/express.js');
+const routesConfig = require('./config/routes.js');
 
 const { init: storage } = require('./models/storage.js');
-
-const { catalog } = require('./controllers/catalog.js');
-const { about } = require('./controllers/about.js');
-const { details } = require('./controllers/details.js');
-const { create, post: createPost } = require('./controllers/create.js');
-const { errorPage } = require('./controllers/errorPage.js');
-const { edit, post: editPost } = require('./controllers/edit.js');
 
 start();
 
@@ -17,25 +11,10 @@ async function start() {
 
     const app = express();
 
-    app.engine('hbs', hbs({
-        extname: '.hbs'
-    }));
+    expressConfig(app);
+    routesConfig(app);
 
-    app.set('view engine', 'hbs');
-    app.use('/static', express.static('static'));
-    app.use('/js', express.static('js'));
-    app.use(express.urlencoded({extended: false}));
     app.use(await storage());
-
-    app.get('/', catalog);
-    app.get('/about', about);
-    app.get('/details/:id', details);
-    app.get('/create', create);
-    app.post('/create', createPost);
-    app.get('/edit/:id', edit);
-    app.post('/edit/:id', editPost);
-
-    app.all('*', errorPage);
-
+    
     app.listen(port, () => console.log(`Server is listening on ${port}...`));
 }
