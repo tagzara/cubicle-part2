@@ -19,14 +19,13 @@ module.exports = {
             description: req.body.description,
             imageUrl: req.body.imageUrl,
             difficulty: Number(req.body.difficulty)
-        }
+        };
 
         try {
-            await req.storage.edit(request.params.id, cube);
+            await req.storage.edit(req.params.id, cube);
+            res.redirect('/');
         } catch (error) {
             res.redirect('404');
         }
-
-        res.redirect('/');
     }
 };

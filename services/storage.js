@@ -1,32 +1,22 @@
-const fs = require('fs/promises');
-const uniqid = require('uniqid');
 const Cube = require('../models/Cube.js');
 
-let data = {};
-
-
 async function init() {
-    try{
-        data = JSON.parse(await fs.readFile('./models/data.json'));
-    } catch (err) {
-        console.error('Error readin database')
-    }
 
     return (req, res, next) => {
         req.storage = {
             getAll, 
             getById,
-            create
+            create,
+            edit
         };
         next();
     }
 }
 
 async function getAll(query) {
-    let cubes = Object
-    .entries(data)
-    .map(([id, v]) => Object.assign({}, { id }, v));
+   const cubes = Cube.find({}).lean();
 
+    /*
     if (query.search) {
         cubes = cubes.filter(c => c.name.toLowerCase().includes(query.search.toLowerCase()));
     }
@@ -36,14 +26,14 @@ async function getAll(query) {
     if (query.to) {
         cubes = cubes.filter(c => c.difficulty <= Number(query.to));
     }
-
+*/
     return cubes;        
 }
 
 async function getById(id) {
-    const cube = data[id];
+    const cube = await Cube.findById(id).lean();
     if (cube) {
-        return Object.assign({}, { id }, cube);
+        return cube;
     } else {
         return undefined;
     }
@@ -55,20 +45,14 @@ async function create(cube) {
 }
 
 async function edit(id, cube) {
-    if (!data[id]) {
+    const existingCube = await Cube.findById(id);
+
+    if (!existingCube) {
         throw new ReferenceError('No such ID in database!');
     }
-    data[id] = cube;
-
-   await persist();
-}
-
-async function persist() {
-    try {
-        await fs.writeFile('./models/data.json', JSON.stringify(data, null, 2));
-    } catch {
-        console.error('Error writing out database');
-    }
+    
+    Object.assign(existingCube, cube);
+    return existingCube.save();
 }
 
 module.exports = {
