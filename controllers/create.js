@@ -16,8 +16,7 @@ module.exports = {
             if (err.name == 'ValidationError') {
                 return res.render('create', { title: 'Create Cube', error: 'All fields are required! Image URL must be valid url adress!'});
             }
-        }
-
-        res.redirect('/');
+        }  
+        res.redirect('/');     
     }
 };
