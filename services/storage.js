@@ -1,5 +1,6 @@
 const Cube = require('../models/Cube.js');
 const Comment = require('../models/Comment.js');
+const Accessory = require('../models/Accessory.js');
 
 async function init() {
 
@@ -9,7 +10,10 @@ async function init() {
             getById,
             create,
             edit, 
-            createComment
+            createComment,
+            createAccessory,
+            getAllAccessories,
+            attachStickers
         };
         next();
     }
@@ -36,7 +40,7 @@ async function getAll(query) {
 }
 
 async function getById(id) {
-    const cube = await Cube.findById(id).populate('comments').lean();
+    const cube = await Cube.findById(id).populate('comments').populate('accessories').lean();
     if (cube) {
         return cube;
     } else {
@@ -74,11 +78,35 @@ async function createComment(cubeId, comment) {
     await cube.save();
 }
 
+async function getAllAccessories(existing) {
+    return Accessory.find({ _id: { $nin: existing } }).lean();
+}
+
+async function createAccessory(accessory) {
+    const record = new Accessory(accessory);
+    return record.save();
+}
+
+async function attachStickers(cubeId, stickerId) {
+    const cube = await Cube.findById(cubeId);
+    const sticker = await Accessory.findById(stickerId);
+
+    if (!cube || !sticker) {
+        throw new ReferenceError('No such ID in database');
+    }
+
+    cube.accessories.push(sticker);
+    return cube.save();
+}
+
 module.exports = {
     init, 
     getAll,
     getById,
     create,
     edit, 
-    createComment
+    createComment,
+    createAccessory, 
+    getAllAccessories,
+    attachStickers
 }
