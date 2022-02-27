@@ -1,21 +1,15 @@
-const { catalog } = require('../controllers/catalog.js');
 const { about } = require('../controllers/about.js');
-const { details, attach, attachPost } = require('../controllers/details.js');
-const { create, post: createPost } = require('../controllers/create.js');
+const { attach, attachPost } = require('../controllers/details.js');
 const { post: commentPost } = require('../controllers/comments.js');
 const { errorPage } = require('../controllers/errorPage.js');
-const { edit, post: editPost } = require('../controllers/edit.js');
 const { createAccessory, accessoryPost } = require('../controllers/accessory.js');
+const productController = require('../controllers/productController.js');
 
 module.exports = (app) => {
-    app.get('/', catalog);
+    app.get('/', (req, res) => res.redirect('/products'));
     app.get('/about', about);
-    app.get('/details/:id', details);
-    app.get('/create', create);
-    app.post('/create', createPost);
 
-    app.get('/edit/:id', edit);
-    app.post('/edit/:id', editPost);
+    app.use('/products', productController);
 
     app.post('/comments/:cubeId/create', commentPost);
 
