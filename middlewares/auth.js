@@ -1,16 +1,19 @@
 const userService = require('../services/user.js');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { COOKIE_NAME, TOKEN_SECRET } = require('../config');
 
 module.exports = () => (req, res, next) => {
-    readToken(req);
-
+    
     req.auth = {
         register,
-        login
+        login,
+        logout
     };
 
-    next();
+    if (readToken(req)) {
+        next();
+    }
 
     async function register({ username, password, repeatPassword }) {
         if (username == '' || password == '' || repeatPassword == '') {
@@ -39,15 +42,32 @@ module.exports = () => (req, res, next) => {
             }
         }
     }
+
+    async function logout() {
+        res.clearCookie(COOKIE_NAME);
+    }
+
     function createToken(user) {
         const userViewModel = { _id: user._id, username: user.username };
-        const token = jwt.sign(userViewModel, 'my very secure secret');
-        res.cookie('SESSION_DATA', token, { httpOnly: true });
+        const token = jwt.sign(userViewModel, TOKEN_SECRET);
+        res.cookie(COOKIE_NAME, token, { httpOnly: true });
 
         return userViewModel;
     }
 
     function readToken() {
-
+        const token = req.cookies[COOKIE_NAME];
+        if (token) {
+            try {
+            const userData = jwt.verify(token, TOKEN_SECRET);
+            req.user = userData;
+            res.locals.user = userData;
+            } catch (err) {
+                res.clearCookie(COOKIE_NAME);
+                res.redirect('/auth/login');
+                return false;
+            }
+        }
+        return true;
     }
 };
