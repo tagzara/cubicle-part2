@@ -1,4 +1,6 @@
+const validator = require('validator');
 const { isGuest, isAuth } = require('../middlewares/guard.js');
+const { body, validationResult } = require('express-validator');
 
 const router = require('express').Router();
 
@@ -7,15 +9,31 @@ router.get('/register', isGuest(), (req, res) => {
 
 });
 
-router.post('/register', isGuest(), async (req, res) => {
+router.post(
+    '/register',
+     isGuest(),
+     body('username', 'Username must be at least 5 characters long and may contain only alphanumeric characters').trim().isLength({ min: 5 }).isAlphanumeric(),
+     body('password', 'Password must be at least 8 characters long and may contain only alphanumeric characters').trim().isLength({ min: 8 }).isAlphanumeric(),
+     body('repeatPassword').trim().custom((value, { req }) => {
+         if (value != req.body.password) {
+             throw new Error('Passwords don\'t match!');
+         }
+         return true;
+     }),
+     
+    async (req, res) => {
     try {
+        const errors = Object.values(validationResult(req).mapped());
+        if (errors.length > 0) {
+            throw new Error(errors.map(e => e.msg).join('\n'));
+        }
         await req.auth.register(req.body);
         res.redirect('/products');
     } catch (err) {
         const ctx = {
             title: 'Register',
-            error: err.message,
-            data: { username: req.body.username }
+            errors: err.message.split('\n'),
+            data: { username: req.body.username, email: req.body.email }
         };
         res.render('register', ctx);
     }
