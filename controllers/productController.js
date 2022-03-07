@@ -34,13 +34,22 @@ router.post('/create', isAuth(), async (req, res) => {
 
     try {
         await req.storage.create(cube);
+        res.redirect('/');
     } catch (err) {
+        cube[`select${cube.difficulty}`] = true;
+
+        const ctx = {
+            title: 'Create Cube',
+            cube
+        };
+
         if (err.name == 'ValidationError') {
-            const errors = parseMongooseError(err);
-            return res.render('create', { title: 'Create Cube', errors });
+            ctx.errors = parseMongooseError(err);
+        } else {
+            ctx.errors = [err.message];
         }
+        res.render('create', ctx);
     }
-    res.redirect('/');
 });
 
 router.get('/details/:id', preloadCube(), async (req, res) => {
